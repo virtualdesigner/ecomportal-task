@@ -44,10 +44,10 @@ export const SignInForm = () => {
     <div className='w-full h-screen bg-sky-100 bg-opacity-50 flex justify-center items-center'>
       <div className='w-1/7'>
         <FormProvider value={formProviderData}>
-          <form onSubmit={onSubmit}>
+          <form onSubmit={onSubmit} className="flex flex-col items-center gap-1">
             <TextInput label="Username" dataKey={LoginFormKeys.userName} />
             <TextInput label="Password" dataKey={LoginFormKeys.password} />
-            <Button type="submit" disabled={isLoginDisabled}>Login</Button>
+            <Button type="submit" className="mt-1" disabled={isLoginDisabled}>Login</Button>
           </form>
         </FormProvider>
       </div>

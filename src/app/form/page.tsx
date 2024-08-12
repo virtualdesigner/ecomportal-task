@@ -2,11 +2,11 @@
 
 import Button from "@/components/Button"
 import { NumberInput, TextInput } from "@/components/input"
+import { ZodNumber, ZodOnlyUppercaseText, ZodString } from "@/lib/zod/types"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import FormProvider from "../../providers/FormProvider"
-import { ZodNumber, ZodOnlyUppercaseText, ZodString } from "@/lib/zod/types"
 
 const UserFormSchema = z.object({
   name: ZodOnlyUppercaseText,
@@ -24,11 +24,11 @@ export default function Form() {
   
   return (
     <FormProvider value={{ errors: formState.errors, register }}>
-      <form onSubmit={handleSubmit((data) => console.log(data))} className="h-[100vh] flex flex-col justify-center items-center">
+      <form onSubmit={handleSubmit((data) => console.log(data))} className="h-[100vh] flex flex-col justify-center items-center gap-1">
         <TextInput label="Name" dataKey={UserFormKeys.name} />
         <TextInput label="Nick name" dataKey={UserFormKeys.nickName} />
         <NumberInput label="Age" dataKey={UserFormKeys.age} />
-        <Button type='submit'>Submit</Button>
+        <Button type='submit' className="mt-2">Submit</Button>
       </form>
     </FormProvider>
   )
