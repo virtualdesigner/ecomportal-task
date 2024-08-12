@@ -1,5 +1,6 @@
 import * as crypto from "crypto"
 import jwt from 'jsonwebtoken'
+import { LoginFormAttributes } from "./zod/schema"
 
 function generateSalt(length = 16): string {
   return crypto.randomBytes(length).toString('hex').slice(0, length)
@@ -37,13 +38,34 @@ export async function verifyPassword(stored: string | null, passwordAttempt: str
 }
 
 export const newAccessToken = (attributes: Record<string, any>): string => {
-  // TODO: Add expiresIn to .env
   const options = { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
   return jwt.sign(JSON.parse(JSON.stringify({ ...attributes })), process.env.JWT_SECRET as string, options)
 }
 
 export const newRefreshToken = (attributes: Record<string, any>): string => {
-  // TODO: Add expiresIn to .env
   const options = { expiresIn: process.env.REFRESH_TOKEN_EXPIRY }
   return jwt.sign(JSON.parse(JSON.stringify({ ...attributes })), process.env.JWT_SECRET as string, options)
+}
+
+export const login = (data: LoginFormAttributes) => {
+  return fetch('./api/login', {
+    method: 'POST',
+    body: JSON.stringify({ ...data })
+  })
+}
+
+export const verifyAccessToken = () => {
+  return fetch('./api/verify-access-token', {
+    method: 'GET'
+  })
+}
+
+export const refreshAccessToken = () => {
+  return fetch('./api/refresh-access-token', {
+    method: 'GET'
+  })
+}
+
+export const verifyJWTToken = (token: string) => {
+  return !!jwt.verify(token, process.env.JWT_SECRET as string)
 }

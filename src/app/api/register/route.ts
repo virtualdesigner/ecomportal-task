@@ -15,14 +15,15 @@ export async function POST(req: Request) {
     await apiPost(query, values)
       .then(() => {
         status = 200
-        respBody = { message: 'Successfully created a user.' }
+        respBody = { success: true, message: 'Successfully created a user.' }
       })
       .catch((err) => {
         status = 400
-        respBody = err
+        respBody = { success: false, message: err }
       })
-    return Response.json(respBody, {
+    return Response.json({
       status,
+      body: respBody
     })
   }
 }

@@ -1,4 +1,4 @@
-import * as jwt from 'jsonwebtoken'
+import { verifyJWTToken } from '@/lib/auth'
 import { NextRequest } from 'next/server'
 
 export async function GET(req: NextRequest) {
@@ -6,13 +6,12 @@ export async function GET(req: NextRequest) {
   const accessToken = req.cookies.get('accessToken')
   if (typeof accessToken === 'string') {
     try {
-      isValidToken = !!jwt.verify(accessToken, process.env.JWT_SECRET as string)
-      console.log('isValidToken: ', isValidToken)
+      isValidToken = verifyJWTToken(accessToken)
     } catch (err) {
       console.log('Error during accessToken validation', err)
     }
   }
-  return Response.json({ isValidToken }, {
+  return Response.json({ success: isValidToken }, {
     status: 200,
   })
 }

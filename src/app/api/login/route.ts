@@ -1,7 +1,48 @@
-import { newAccessToken, newRefreshToken, verifyPassword } from "@/lib/auth"
-import { aDayInMilliseconds } from "@/lib/constants"
-import { apiGet, apiPost } from "@/lib/database"
-import { NextResponse } from "next/server"
+import { newAccessToken, newRefreshToken, verifyPassword } from '@/lib/auth';
+import { aDayInMilliseconds } from '@/lib/constants';
+import { apiGet, apiPost } from '@/lib/database';
+import { NextResponse } from 'next/server';
+
+const ENVIRONMENT = process.env.NODE_ENV || "development";
+
+export const generateTokensAndAddToCookies = async (
+  user: { id: number; userName: string },
+  res: Response
+) => {
+  const refreshToken = newRefreshToken({ id: user.id, userName: user.userName })
+  const accessToken = newAccessToken({ id: user.id, userName: user.userName })
+  const query = `UPDATE users SET refreshToken=? WHERE id=?`
+  try {
+    await apiPost(query, [refreshToken, user.id.toString()])
+  } catch (err) {
+    console.error('Error while storing the refreshToken.', err)
+    return NextResponse.json({
+      status: 500,
+      body: { success: false, message: 'Server error.' }
+    })
+  }
+  const response = NextResponse.json({
+    ...res,
+    body: { success: true }
+  })
+  response.cookies.set({
+    name: 'accessToken',
+    value: accessToken,
+    expires: Date.now() + (aDayInMilliseconds * 400),
+    httpOnly: true,
+    secure: true,
+    sameSite: 'strict',
+  })
+  response.cookies.set({
+    name: 'refreshToken',
+    value: refreshToken,
+    expires: Date.now() + (aDayInMilliseconds * 400),
+    httpOnly: true,
+    secure: true,
+    sameSite: 'strict',
+  })
+  return response
+}
 
 export async function POST(req: Request, res: Response) {
   const body = await req.json()
@@ -11,51 +52,39 @@ export async function POST(req: Request, res: Response) {
     `
     let user, isVerifiedUser
     try {
-      user = ((await apiGet(query)) as [{ id: number, userName: string, passwordHash: string }])?.[0]
+      user = (
+        (await apiGet(query)) as [
+          { id: number; userName: string; passwordHash: string }
+        ]
+      )?.[0]
       isVerifiedUser = await verifyPassword(user.passwordHash, body.password)
     } catch {
       return Response.json({
         status: 400,
-        body: 'Invalid credentials.'
+        body: { success: false, message: 'Invalid credentials.' }
       })
     }
 
-    let status = 200, respBody
+    let status = 200
     if (isVerifiedUser) {
-      const refreshToken = newRefreshToken({ id: user.id, userName: user.userName })
-      const accessToken = newAccessToken({ id: user.id, userName: user.userName })
-      const query = `
-        UPDATE users SET refreshToken=? WHERE id=?
-      `
       try {
-        await apiPost(query, [refreshToken, user.id.toString()])
+        return await generateTokensAndAddToCookies(user, res)
       } catch (err) {
-        console.error('Error while storing the refreshToken.', err)
         return Response.json({
           status: 500,
-          body: 'Server error.'
+          body: { success: false, message: 'Server error.' }
         })
       }
-      const response = NextResponse.json(res);
-      response.cookies.set({
-        name: 'accessToken',
-        value: accessToken,
-        path: '/',
-        expires: aDayInMilliseconds,
-        httpOnly: true,
-        sameSite: 'strict'
-      })
-      return response
     } else {
-      status = 400
+      return Response.json({
+        status,
+        body: { success: false, message: 'Invalid credentials.' }
+      })
     }
-    return Response.json(respBody, {
-      status,
-    })
   } else {
     return Response.json({
       status: 400,
-      body: 'Invalid credentials.'
+      body: { success: false, message: 'Invalid credentials.' }
     })
   }
 }
