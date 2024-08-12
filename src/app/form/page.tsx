@@ -5,16 +5,8 @@ import { NumberInput, TextInput } from "@/components/input"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import FormProvider from "../providers/FormProvider"
-
-const ZodString = z.string({ message: 'Expected a string value' })
-const ZodOnlyUppercaseText = ZodString.refine(
-  (val) => /^[A-Z]+$/.test(val),
-  {
-    message: "String must be in uppercase and contain only letters",
-  }
-)
-const ZodNumber = z.number({message: 'Expected a number value'})
+import FormProvider from "../../providers/FormProvider"
+import { ZodNumber, ZodOnlyUppercaseText, ZodString } from "@/lib/zod/types"
 
 const UserFormSchema = z.object({
   name: ZodOnlyUppercaseText,
